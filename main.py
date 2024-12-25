@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import requests
 import os
 from dotenv import load_dotenv
@@ -33,18 +34,18 @@ if __name__ == "__main__":
     CLIENT_SECRET = os.getenv("CLIENT_SECRET")
     REFRESH_TOKEN = os.getenv("REFRESH_TOKEN")
 
+    crnt_time = datetime.now()
     try:
         oauth = OAuth(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
         tokens = oauth.get_new_tokens()
+        
+        expired_at = datetime.fromtimestamp(crnt_time.timestamp() + tokens['expires_in']).strftime('%d-%m-%Y %H:%M:%S')
 
-        print("New Access Token:", tokens["access_token"])
-
-        if "refresh_token" in tokens:
-            print("New Refresh Token:", tokens["refresh_token"])
-        else:
-            print("No new refresh token returned.")
+        print(f"New Access Token: {tokens['access_token']}. Expired at {expired_at}.")
+        
+        with open("tokens.txt", "a") as f:
+            f.write(f"{crnt_time.strftime('%H:%M:%S')}\t{json.dumps(tokens)}. Expired at {expired_at}.\n")
     except Exception as e:
-        crnt_time = datetime.now()
         print(f"[{crnt_time.strftime('%d-%m-%Y %H:%M:%S')}] Error:", ''.join(str(e).splitlines()))
 
         with open(f"logs/{crnt_time.strftime('%d-%m-%Y')}-error.log", "a") as f:
